@@ -6,7 +6,7 @@
 #include <sstream>
 #include <iomanip>
 #include <cstdlib> 
-
+#include <ctime>
 
 using std::string;
 using std::cout;
@@ -14,6 +14,7 @@ using std::cin;
 using std::endl;
 using namespace std;
 #include <thread>
+#include <Cocoa/Cocoa.h>
 
 
 
@@ -25,31 +26,39 @@ void animation(int version){
         cout << "      ( o.o )       [2] Create New Entry" << std::endl;
         cout << "       > ^ <  /     [3] Storage Information (filepath,size)" << std::endl;
         cout << "      /       |     [4] Raw content" << std::endl;
-        cout << "     (  |  |  )     [5] Quit(cmd+w)" << std::endl;
-        cout << "    /   |  |   \\ " << std::endl;
+        cout << "     (  |  |  )     [5] password generator" << std::endl;
+        cout << "    /   |  |   \\    [6] Quit(cmd+w)\n" << std::endl;
         cout << "   (____|_____)     command ---->  ";
         cout <<"";
     }
 
     if(version==2){
-    cout << "" << endl;
-    cout << "" << endl;
-    cout << "     ( (\n";
-    cout << "      ) )\n";
-    cout << "   ........\n";
-    cout << "   |      |]\n";
-    cout << "   \\      /  \n";
-    cout << "    `----'    Please Enter the Password ---> ";
+        cout << "" << endl;
+        cout << "" << endl;
+        cout << "     ( (\n";
+        cout << "      ) )\n";
+        cout << "   ........\n";
+        cout << "   |      |]\n";
+        cout << "   \\      /  \n";
+        cout << "    `----'    Please Enter the Password ---> ";
     }
 
     if(version==3){
-    cout << "" << endl;
-    cout << "               .--.                                   \n";
-    cout << "            .-(    ).             .--.                   \n";
-    cout << "           (___.__)__)         .-(    ).                          \n";
-    cout << "           *  *  *  *         (___.__)__)                          \n";
-    cout << "           *  *  *  *         *  *  *  *                          \n";
-    cout << "\n";
+        cout << "" << endl;
+        cout << "               .--.                                   \n";
+        cout << "            .-(    ).             .--.                   \n";
+        cout << "           (___.__)__)         .-(    ).                          \n";
+        cout << "           *  *  *  *         (___.__)__)                          \n";
+        cout << "           *  *  *  *         *  *  *  *                          \n";
+        cout << "\n";
+    }
+    if(version==4){
+        std::cout << "##  #   #  ##### #### " << std::endl;
+        std::cout << "##  ##  #  #    #    #" << std::endl;
+        std::cout << "##  # # #  ###  #    #" << std::endl;
+        std::cout << "##  #  ##  #    #    #" << std::endl;
+        std::cout << "##  #   #  #     #### " << std::endl;
+        cout << "\n";
 }
 }
 
@@ -71,6 +80,14 @@ void quit(){
     exit(0);
 }
 
+void copy_to_clipboard(const std::string& text) {
+    @autoreleasepool {
+        NSPasteboard *pasteboard = [NSPasteboard generalPasteboard];
+        [pasteboard clearContents];
+        [pasteboard setString:[NSString stringWithUTF8String:text.c_str()] forType:NSPasteboardTypeString];
+    }
+}
+
 void invalid_command(){
     cout << "\nInvalid Command, returning to main menu " << endl;
     std::this_thread::sleep_for(std::chrono::seconds(1));
@@ -89,7 +106,7 @@ void clear_file(const std::string& filename) {
 
 void handle_input(){
     reset_color();
-    cout << " \n[1] see main menu " <<endl << "command ---> ";
+    cout << " \n[1] see main menu " <<endl << "\ncommand ---> ";
     string cmd;
     cin >> cmd;
     if(cmd == "1"){
@@ -98,6 +115,29 @@ void handle_input(){
     else{
         invalid_command();
     }
+}
+
+string get_random_string(int length) {
+    const std::string charset = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ1234567890";
+    std::string result;
+    srand(time(0));
+    for (int i = 0; i < length; i++) {
+        result.push_back(charset[rand() % charset.length()]);
+    }
+    return result;
+}
+
+void make_random_pwd_interface(){
+    clear_console();
+    string pwd = get_random_string(20);
+    set_color("33");
+    cout << "Generated Password : "; 
+    set_color("31");
+    cout << pwd << endl;
+    copy_to_clipboard(pwd);
+    reset_color();
+    cout << "\nPassword copied to clipboard" << endl;
+    handle_input();
 }
 
 
@@ -191,12 +231,14 @@ tuple<vector<string>, vector<string>, vector<string>> sort_vector(vector<string>
 }
 
 
+
 void show_read_file_as_entries(string key,string filename) {
     clear_console();
     vector<string> file_per_column_encrypted = read_file(filename);
     vector<string> file_per_column_decrypted;
     vector<string> entries, usernames, passwords;
     int entry_number;
+    bool run = true;
     string cmd;
     for (string x : file_per_column_encrypted) {
         file_per_column_decrypted.push_back(decrypt(x, key));
@@ -213,41 +255,51 @@ void show_read_file_as_entries(string key,string filename) {
     cout << ""<<endl;
     cout << "Please Enter the Entry Number to see the Details: ";
     cin >> entry_number;
-    if (entry_number < entries.size()) {
-        clear_console();
-        animation(3);
-        set_color("33");
-        cout << "Username: " ;
-        set_color("31");
-        cout<< usernames[entry_number] << endl;
-        set_color("33");
-        cout << "Password: " ;
-        set_color("31");
-        cout<< passwords[entry_number] << endl;
-        reset_color();
-        cout << "\n[1] see main menu " <<endl << "[2] delete this entry\n" << endl;
-        cout << "command ---> ";
-        cin >> cmd;
-        if(cmd == "1"){
+        if (entry_number < entries.size()) {
+            while (run==true){
             clear_console();
-            //function closes automatically
+            animation(3);
+            set_color("33");
+            cout << "Username: " ;
+            set_color("31");
+            cout<< usernames[entry_number] << endl;
+            set_color("33");
+            cout << "Password: " ;
+            set_color("31");
+            cout<< passwords[entry_number] << endl;
+            reset_color();
+            cout << "\n[1] see main menu " <<endl << "[2] delete this entry\n[U] copy username to clipboard\n[P] copy password to clipboard" << endl;
+            cout << "\ncommand ---> ";
+            cin >> cmd;
+            if(cmd == "1"){
+
+                clear_console();
+                run = false;
+            }
+            if (cmd == "2") {
+                cout << "Deleting Entry Number ["<<entry_number<<"]"<< "..."<< endl;
+                entries.erase(entries.begin() + entry_number);
+                usernames.erase(usernames.begin() + entry_number);
+                passwords.erase(passwords.begin() + entry_number);
+                clear_file(filename);
+                for(int x = 0; x < entries.size(); x++){
+                    save_to_file(filename, encrypt(entries[x], key), encrypt(usernames[x], key), encrypt(passwords[x], key));
+            }   
+            clear_console();        
+            } 
+            if(cmd== "u"){
+                copy_to_clipboard(usernames[entry_number]);
+            }
+            if(cmd == "p"){
+                copy_to_clipboard(passwords[entry_number]);
+            }
+            if(cmd!="1" && cmd!="2" && cmd!="u" && cmd!="p"){ 
+                invalid_command();
+            }
         }
-        if(cmd == "2"){
-            cout << "Deleting Entry Number ["<<entry_number<<"]"<< "..."<< endl;
-            entries.erase(entries.begin() + entry_number);
-            usernames.erase(usernames.begin() + entry_number);
-            passwords.erase(passwords.begin() + entry_number);
-            clear_file(filename);
-            for(int x = 0; x < entries.size(); x++){
-                save_to_file(filename, encrypt(entries[x], key), encrypt(usernames[x], key), encrypt(passwords[x], key));
-        }   
-        clear_console();        
-    } 
-    if(cmd!="1" && cmd!="2"){ 
-        invalid_command();
     }
 }
-}
+
 
 
 string save_interface(string key,string filename) {
@@ -269,6 +321,7 @@ string save_interface(string key,string filename) {
 
 void show_file_info(string filename) {
     clear_console();
+    animation(4);
     cout << "Path :  ";
     set_color("31");
     cout << filename << endl;
@@ -283,12 +336,12 @@ void show_file_info(string filename) {
 void show_raw_content_encrypted(string filename){
     clear_console();
     vector<string> file_per_column_encrypted = read_file(filename);
-    set_color("33");
-    cout << "Raw Encrypted Content (hex/base16) : " << endl;  
     set_color("31");
     for (string x : file_per_column_encrypted) {
         cout << x << endl;
     }
+    set_color("33");
+    cout << "[Raw Encrypted Content (hex/base16)]  " << endl;  
     handle_input();
 }
 
@@ -296,7 +349,7 @@ void show_raw_content_encrypted(string filename){
 int main() {
     std::string pwd;
     std::string key;
-    std::string filename = "/Users/fynn/Desktop/Data/Projects/xor_c++/beispiel.txt";
+    std::string filename = "/Users/fynn/Desktop/Data/Informatik/Projects/xor_c++/database.txt";
     std::string cmd;
     bool run = true;
     clear_console();
@@ -312,8 +365,11 @@ int main() {
         if (cmd == "1") {
             show_read_file_as_entries(key,filename);
         }
-        if (cmd == "5") {
+        if (cmd == "6") {
             quit();
+        }
+        if (cmd == "5") {
+            make_random_pwd_interface();
         }
         if (cmd == "3") {
             show_file_info(filename);
